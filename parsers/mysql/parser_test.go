@@ -63,7 +63,9 @@ var expected string = "package signatures " +
 
 func TestParser(t *testing.T) {
 	before := time.Now().UnixNano() / (1 * int64(time.Microsecond))
-	Mysql(createTableString, "alarm_state_tracking")
+
+	Mysql(map[string]string{
+		"alarm_state_tracking": createTableString})
 	after := time.Now().UnixNano() / (1 * int64(time.Microsecond))
 	fmt.Println(after - before)
 }

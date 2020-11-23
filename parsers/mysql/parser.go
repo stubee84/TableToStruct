@@ -18,12 +18,13 @@ var columnTypeWoutSizeReg *regexp.Regexp = regexp.MustCompile("\\s(\\w+)\\s.*,$"
 var columnNotNullReg *regexp.Regexp = regexp.MustCompile("NOT NULL")
 var columnNullReg *regexp.Regexp = regexp.MustCompile("DEFAULT NULL")
 
-func Mysql(createTable, tableName string) string {
+func Mysql(tableMap map[string]string) string {
+	tableName := config.Get().TableName
 	sqlStruct := &strings.Builder{}
 	config.Logger().Info("Parsing the table DDL")
 	sqlStruct.WriteString(fmt.Sprintf("package %s \n\ntype %s struct {\n", tableName, tableName))
 
-	for i, line := range strings.Split(createTable, "\n") {
+	for i, line := range strings.Split(tableMap[tableName], "\n") {
 		//first line is the create table line from show create table
 		if i == 0 {
 			continue
@@ -60,7 +61,7 @@ func Mysql(createTable, tableName string) string {
 	}
 
 	//this is the table name method
-	sqlStruct.WriteString(fmt.Sprintf("}\n\nfunc (%s *%s) TableName() string {\nreturn \"%s\"\n}", string(tableName[0]), tableName, tableName))
+	sqlStruct.WriteString(fmt.Sprintf("}\n\nfunc (%s *%s) TableName() string {\nreturn \"%s\"\n}", tableName, tableName, tableName))
 	config.Logger().Info("Finished parsing")
 	return sqlStruct.String()
 }
