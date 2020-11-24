@@ -1,0 +1,6 @@
+{
+    "logFile": "config/TableToStruct",
+    "dialect": "postgres",
+    "connString": "postgres:\/\/postgres:password@localhost\/telnet?sslmode=disable",
+    "tableName": "chat"
+}

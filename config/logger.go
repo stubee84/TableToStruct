@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strings"
+	"time"
 )
 
 type Logs struct {
 	FileLogger *log.Logger
-	// StdOutLogger *log.Logger
 }
 
 func FileLogger() *os.File {
-	file, err := os.OpenFile(fmt.Sprintf("%s.log", strings.Trim(logFile, " ")), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
+	year, month, day := time.Now().Local().Date()
+	file, err := os.OpenFile(fmt.Sprintf("%s_%d-%s-%d.log", logFile, year, month.String(), day), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		log.Println(err)
 	}
@@ -21,7 +21,6 @@ func FileLogger() *os.File {
 }
 
 func Logger() *Logs {
-	// stdOutLogger := log.New(os.Stdout, logFile, log.Ldate|log.Ltime)
 	log.SetOutput(os.Stdout)
 	log.SetPrefix(logFile)
 	log.SetFlags(log.Ldate | log.Ltime)

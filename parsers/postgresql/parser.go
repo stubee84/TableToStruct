@@ -16,7 +16,6 @@ type PostgresDDL struct {
 
 func (p *PostgresDDL) Parse(tableMap map[string]string) string {
 	tableName := tableMap["tableName"]
-	fmt.Println(tableName)
 	delete(tableMap, "tableName")
 	sqlStruct := strings.Builder{}
 
