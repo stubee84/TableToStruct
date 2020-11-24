@@ -2,21 +2,23 @@ package config
 
 import (
 	"bufio"
+	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
-	"time"
 )
 
 type Config struct {
-	Dialect    string
-	ConnString string
-	TableName  string
+	Dialect    string `json:"dialect"`
+	ConnString string `json:"connString"`
+	TableName  string `json:"tableName"`
+	LogFile    string `json:"logFile"`
 }
 
 func Get() *Config {
-	if dialect == "" && connString == "" && tableName == "" {
+	if cfgFile == "" || (dialect == "" && connString == "" && tableName == "") {
 		FlagParser()
 	}
 
@@ -27,16 +29,35 @@ func Get() *Config {
 	}
 }
 
+func GetConfig() {
+	cfg := &Config{}
+	cfgBody, err := ioutil.ReadFile(cfgFile)
+	if err != nil {
+		Logger().Fatal(err.Error())
+	}
+	err = json.Unmarshal(cfgBody, cfg)
+	if err != nil {
+		Logger().Fatal(err.Error())
+	}
+
+	dialect = cfg.Dialect
+	connString = cfg.ConnString
+	tableName = cfg.TableName
+	logFile = cfg.LogFile
+}
+
 func FlagParser() {
+	flag.StringVar(&cfgFile, "file", "config/config.json", "Config file for table access")
 	flag.StringVar(&dialect, "d", "mysql", "Specify SQL dialect. Default is mysql")
 	flag.StringVar(&connString, "c", "", "Specify the connection string. Example: user:password@tcp(127.0.0.1:3306)/database")
 	flag.StringVar(&tableName, "t", "", "The database tablename to parse.")
-	flag.StringVar(&logFile, "l", fmt.Sprintf("TableToStruct_%d ", time.Now().Unix()), "The log file to which logs are written")
+	flag.StringVar(&logFile, "l", "config/TableToStruct", "The log file to which logs are written")
 
 	flag.Parse()
 
 	if dialect == "" || connString == "" || tableName == "" {
-		log.Fatalf("Cannot have empty values for -d, -c or -t")
+		log.Print("empty values for -d, -c or -t. using config.json")
+		GetConfig()
 	}
 }
 
@@ -54,3 +75,4 @@ var dialect string
 var connString string
 var tableName string
 var logFile string
+var cfgFile string
