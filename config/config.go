@@ -54,7 +54,3 @@ var dialect string
 var connString string
 var tableName string
 var logFile string
-
-// var dialect = ReadInput("Enter the sql dialect (mysql, postgresql): ")
-// var connString = ReadInput("\nEnter the connection string ('user:password@tcp(127.0.0.1:3306)/database'): ")
-// var tableName = ReadInput("\nEnter the table name: ")

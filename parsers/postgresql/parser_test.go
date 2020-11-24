@@ -1,63 +1,52 @@
 package postgresql
 
-var createTableString string = "CREATE TABLE `alarm_state_tracking` (\n" +
-	"`id` int(11) NOT NULL,\n" +
-	"`cascade_id` varchar(32) NOT NULL,\n" +
-	"`alarm_sent_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n" +
-	"`clear_alarm` TINYINT(1) NULL,\n" +
-	"`alarm_cleared_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n" +
-	"`api_recovery_event_id` int(11) DEFAULT NULL,\n" +
-	"`api_status_code_problem` int(11) DEFAULT NULL,\n" +
-	"`api_status_code_recovery` int(11) DEFAULT NULL,\n" +
-	"`api_response_problem` varchar(500) DEFAULT NULL,\n" +
-	"`api_response_recovery` varchar(500) DEFAULT NULL,\n" +
-	"`created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n" +
-	"`updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n" +
-	"PRIMARY KEY (`id`,`cascade_id`)\n" +
-	") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"
+import (
+	"testing"
+)
 
-var expected string = "package signatures " +
-	"\n" +
-	"type signatures struct {" +
-	"ID string \\`gorm:\"column:id\"\\`+" +
-	"TITLE string \\`gorm:\"column:title\"\\`+" +
-	"SOURCE string \\`gorm:\"column:source\"\\`+" +
-	"CATEGORYID \\`gorm:\"column:category_id\"\\`+" +
-	"VENDOR \\`gorm:\"column:vendor\"\\`+" +
-	"RAW string \\`gorm:\"column:raw\"\\`+" +
-	"SEVERITY \\`gorm:\"column:severity\"\\`+" +
-	"SCORE \\`gorm:\"column:score\"\\`+" +
-	"ACTIVE int64 \\`gorm:\"column:active\"\\`+" +
-	"SUPPORTED int64 \\`gorm:\"column:supported\"\\`+" +
-	"CREATELSE int64 \\`gorm:\"column:create_lse\"\\`+" +
-	"CREATEBACKHAULLSE int64 \\`gorm:\"column:create_backhaul_lse\"\\`+" +
-	"SUPPRESSED int64 \\`gorm:\"column:suppressed\"\\`+" +
-	"SETTOINFO int64 \\`gorm:\"column:set_to_info\"\\`+" +
-	"ISVISIBLE int64 \\`gorm:\"column:is_visible\"\\`+" +
-	"ISINFO int64 \\`gorm:\"column:is_info\"\\`+" +
-	"CREATECASE int64 \\`gorm:\"column:create_case\"\\`+" +
-	"INVITEFIRSTRESPONSE int64 \\`gorm:\"column:invite_first_response\"\\`+" +
-	"INVITEBACKHAUL int64 \\`gorm:\"column:invite_backhaul\"\\`+" +
-	"UPDATEDBY \\`gorm:\"column:updated_by\"\\`+" +
-	"DELETEDBY \\`gorm:\"column:deleted_by\"\\`+" +
-	"COUNT int64 \\`gorm:\"column:count\"\\`+" +
-	"LASTSEEN \\`gorm:\"column:last_seen\"\\`+" +
-	"CREATEDAT string \\`gorm:\"column:created_at\"\\`+" +
-	"UPDATEDAT string \\`gorm:\"column:updated_at\"\\`+" +
-	"DELETEDAT \\`gorm:\"column:deleted_at\"\\`+" +
-	"SOURCE \\`gorm:\"column:source\"\\`+" +
-	"SUPPORTED `gorm:\"column:supported\"\\`+" +
-	"VENDOR \\`gorm:\"column:vendor\"\\`+" +
-	"SEVERITY \\`gorm:\"column:severity\"\\`+" +
+var createTableMap map[string]string = map[string]string{
+	"tableName": "alarm_state_tracking",
+	"1":         "id:false:integer",
+	"2":         "cascade_id:false:text",
+	"3":         "alarm_sent_at:false:timestamp with time zone",
+	"4":         "clear_alarm:true:boolean",
+	"5":         "alarm_cleared_at:false:timestamp with time zone",
+	"6":         "api_recovery_event_id:true:integer",
+	"7":         "api_status_code_problem:true:integer",
+	"8":         "api_status_code_recovery:true:integer",
+	"9":         "api_response_problem:true:text",
+	"10":        "api_response_recovery:true:text",
+	"11":        "created_at:false:timestamp with time zone",
+	"12":        "updated_at:false:timestamp with time zone",
+}
+
+var expected string = "package alarm_state_tracking " +
+	"\n\n" +
+	"type alarm_state_tracking struct {\n" +
+	"Id int64 `gorm:\"column:id\"`\n" +
+	"CascadeId string `gorm:\"column:cascade_id\"`\n" +
+	"AlarmSentAt time.Time `gorm:\"column:alarm_sent_at\"`\n" +
+	"ClearAlarm sql.NullBool `gorm:\"column:clear_alarm\"`\n" +
+	"AlarmClearedAt time.Time `gorm:\"column:alarm_cleared_at\"`\n" +
+	"ApiRecoveryEventId sql.NullInt64 `gorm:\"column:api_recovery_event_id\"`\n" +
+	"ApiStatusCodeProblem sql.NullInt64 `gorm:\"column:api_status_code_problem\"`\n" +
+	"ApiStatusCodeRecovery sql.NullInt64 `gorm:\"column:api_status_code_recovery\"`\n" +
+	"ApiResponseProblem sql.NullString `gorm:\"column:api_response_problem\"`\n" +
+	"ApiResponseRecovery sql.NullString `gorm:\"column:api_response_recovery\"`\n" +
+	"CreatedAt time.Time `gorm:\"column:created_at\"`\n" +
+	"UpdatedAt time.Time `gorm:\"column:updated_at\"`\n" +
 	"}" +
-	"\n" +
-	"func (s *signatures) TableName() string {" +
-	"return \"signatures\"" +
+	"\n\n" +
+	"func (alarm_state_tracking *alarm_state_tracking) TableName() string {\n" +
+	"return \"alarm_state_tracking\"\n" +
 	"}"
 
-	// func TestParser(t *testing.T) {
-	// 	before := time.Now().UnixNano() / (1 * int64(time.Microsecond))
-	// 	Postgresql(createTableString, "alarm_state_tracking")
-	// 	after := time.Now().UnixNano() / (1 * int64(time.Microsecond))
-	// 	fmt.Println(after - before)
-	// }
+func TestParser(t *testing.T) {
+	p := PostgresDDL{}
+	finishedStruct := p.Parse(createTableMap)
+
+	if finishedStruct != expected {
+		t.Logf("expected and actual are not equal. expected: \n%s\n \nactual: \n%s", expected, finishedStruct)
+		t.Fail()
+	}
+}

@@ -2,10 +2,16 @@ package mysql
 
 import (
 	"TableToStruct/config"
+	"database/sql"
 	"fmt"
 	"regexp"
 	"strings"
 )
+
+type MysqlDDL struct {
+	table       string
+	createTable string
+}
 
 //`id`
 var columnNameReg *regexp.Regexp = regexp.MustCompile("(\\`\\w+\\`)\\s.*,$")
@@ -18,13 +24,17 @@ var columnTypeWoutSizeReg *regexp.Regexp = regexp.MustCompile("\\s(\\w+)\\s.*,$"
 var columnNotNullReg *regexp.Regexp = regexp.MustCompile("NOT NULL")
 var columnNullReg *regexp.Regexp = regexp.MustCompile("DEFAULT NULL")
 
-func Mysql(tableMap map[string]string) string {
-	tableName := config.Get().TableName
+func (m *MysqlDDL) Parse(tableMap map[string]string) string {
+	var tableName string
+	var ddl string
+	for tableName, ddl = range tableMap {
+	}
+	// tableName := config.Get().TableName
 	sqlStruct := &strings.Builder{}
 	config.Logger().Info("Parsing the table DDL")
 	sqlStruct.WriteString(fmt.Sprintf("package %s \n\ntype %s struct {\n", tableName, tableName))
 
-	for i, line := range strings.Split(tableMap[tableName], "\n") {
+	for i, line := range strings.Split(ddl, "\n") {
 		//first line is the create table line from show create table
 		if i == 0 {
 			continue
@@ -59,11 +69,25 @@ func Mysql(tableMap map[string]string) string {
 			mysqlToGoNull(columnName, columnType, sqlStruct)
 		}
 	}
-
 	//this is the table name method
 	sqlStruct.WriteString(fmt.Sprintf("}\n\nfunc (%s *%s) TableName() string {\nreturn \"%s\"\n}", tableName, tableName, tableName))
 	config.Logger().Info("Finished parsing")
+
 	return sqlStruct.String()
+}
+
+func (m *MysqlDDL) GetTable(rows *sql.Rows) map[string]string {
+	defer rows.Close()
+
+	tableMap := make(map[string]string)
+	for rows.Next() {
+		err := rows.Scan(&m.table, &m.createTable)
+		if err != nil {
+			config.Logger().Fatal(err.Error())
+		}
+		tableMap[m.table] = m.createTable
+	}
+	return tableMap
 }
 
 func splitter(r rune) bool {
