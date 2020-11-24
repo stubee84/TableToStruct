@@ -4,15 +4,22 @@ import (
 	"TableToStruct/config"
 	"database/sql"
 	"fmt"
-	"log"
 
 	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
 )
 
-func Connect() (*sql.DB, error) {
-	db, err := sql.Open(config.Get().Dialect, config.Get().ConnString)
+func MysqlConnect() (*sql.DB, error) {
+	db, err := sql.Open("mysql", config.Get().ConnString)
 	if err != nil {
-		log.Println(err)
+		return nil, fmt.Errorf("failed to connect to db. %s", err.Error())
+	}
+	return db, nil
+}
+
+func PostgresConnect() (*sql.DB, error) {
+	db, err := sql.Open("postgres", config.Get().ConnString)
+	if err != nil {
 		return nil, fmt.Errorf("failed to connect to db. %s", err.Error())
 	}
 	return db, nil
