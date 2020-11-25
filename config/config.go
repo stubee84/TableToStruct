@@ -4,13 +4,9 @@ import (
 	"encoding/json"
 	"flag"
 	"io/ioutil"
-	"log"
 )
 
 type Config struct {
-	// Dialect    string     `json:"dialect"`
-	// ConnString string     `json:"connString"`
-	// TableName  string     `json:"tableName"`
 	LogFile   string     `json:"logFile"`
 	Databases []Database `json:"databases"`
 }
@@ -27,8 +23,16 @@ type Table struct {
 }
 
 func InitConfig() {
+	flag.StringVar(&dialect, "d", "mysql", "Specify SQL dialect. Default is mysql")
+	flag.StringVar(&connString, "c", "", "Specify the connection string. Example: user:password@tcp(127.0.0.1:3306)/database")
+	flag.StringVar(&tableName, "t", "", "The database tablename to parse.")
+	flag.StringVar(&cfgFile, "file", "config/config.json", "Config file for table access")
+	flag.StringVar(&logFile, "l", "config/TableToStruct", "The log file to which logs are written")
+	flag.Parse()
+
+	cfg := &Config{}
 	if !FlagParser() {
-		cfg := &Config{}
+
 		cfgBody, err := ioutil.ReadFile(cfgFile)
 		if err != nil {
 			FlagParser()
@@ -41,26 +45,25 @@ func InitConfig() {
 
 		logFile = cfg.LogFile
 		databases = cfg.Databases
-
-		// for _, db := range cfg.Databases {
-		// 	for _, table := range db.Tables {
-		// 		tables = append(tables, table)
-		// 	}
-		// }
+	} else {
+		cfg.LogFile = logFile
+		cfg.Databases = []Database{
+			{
+				Dialect:    dialect,
+				ConnString: connString,
+				Tables: []Table{
+					{
+						Name: tableName,
+					},
+				},
+			},
+		}
 	}
 }
 
 func FlagParser() bool {
-	flag.StringVar(&cfgFile, "file", "config/config.json", "Config file for table access")
-	flag.StringVar(&dialect, "d", "mysql", "Specify SQL dialect. Default is mysql")
-	flag.StringVar(&connString, "c", "", "Specify the connection string. Example: user:password@tcp(127.0.0.1:3306)/database")
-	flag.StringVar(&tableName, "t", "", "The database tablename to parse.")
-	flag.StringVar(&logFile, "l", "config/TableToStruct", "The log file to which logs are written")
-
-	flag.Parse()
-
 	if dialect == "" || connString == "" || tableName == "" {
-		log.Print("empty values for -d, -c or -t. using config.json")
+		Logger().Info("empty values for -d, -c or -t. using config.json")
 		return false
 	}
 	return true
@@ -75,6 +78,4 @@ var connString string
 var tableName string
 var logFile string
 var cfgFile string
-
-// var tables []Table = []Table{}
 var databases []Database

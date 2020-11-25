@@ -11,10 +11,9 @@ import (
 )
 
 func main() {
+	config.InitConfig()
 	config.Logger()
 	defer config.FileLogger().Close()
-
-	config.InitConfig()
 
 	for _, database := range config.GetDBs() {
 		selectQuery(&database)
