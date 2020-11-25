@@ -1,52 +1,56 @@
 package config
 
 import (
-	"bufio"
 	"encoding/json"
 	"flag"
-	"fmt"
 	"io/ioutil"
 	"log"
-	"os"
 )
 
 type Config struct {
-	Dialect    string `json:"dialect"`
-	ConnString string `json:"connString"`
-	TableName  string `json:"tableName"`
-	LogFile    string `json:"logFile"`
+	// Dialect    string     `json:"dialect"`
+	// ConnString string     `json:"connString"`
+	// TableName  string     `json:"tableName"`
+	LogFile   string     `json:"logFile"`
+	Databases []Database `json:"databases"`
 }
 
-func Get() *Config {
-	if cfgFile == "" || (dialect == "" && connString == "" && tableName == "") {
-		FlagParser()
-	}
+type Database struct {
+	Dialect    string  `json:"dialect"`
+	ConnString string  `json:"connString"`
+	Tables     []Table `json:"tables"`
+	Query      string
+}
 
-	return &Config{
-		Dialect:    dialect,
-		ConnString: connString,
-		TableName:  tableName,
+type Table struct {
+	Name string `json:"name"`
+}
+
+func InitConfig() {
+	if !FlagParser() {
+		cfg := &Config{}
+		cfgBody, err := ioutil.ReadFile(cfgFile)
+		if err != nil {
+			FlagParser()
+			Logger().Fatal(err.Error())
+		}
+		err = json.Unmarshal(cfgBody, cfg)
+		if err != nil {
+			Logger().Fatal(err.Error())
+		}
+
+		logFile = cfg.LogFile
+		databases = cfg.Databases
+
+		// for _, db := range cfg.Databases {
+		// 	for _, table := range db.Tables {
+		// 		tables = append(tables, table)
+		// 	}
+		// }
 	}
 }
 
-func GetConfig() {
-	cfg := &Config{}
-	cfgBody, err := ioutil.ReadFile(cfgFile)
-	if err != nil {
-		Logger().Fatal(err.Error())
-	}
-	err = json.Unmarshal(cfgBody, cfg)
-	if err != nil {
-		Logger().Fatal(err.Error())
-	}
-
-	dialect = cfg.Dialect
-	connString = cfg.ConnString
-	tableName = cfg.TableName
-	logFile = cfg.LogFile
-}
-
-func FlagParser() {
+func FlagParser() bool {
 	flag.StringVar(&cfgFile, "file", "config/config.json", "Config file for table access")
 	flag.StringVar(&dialect, "d", "mysql", "Specify SQL dialect. Default is mysql")
 	flag.StringVar(&connString, "c", "", "Specify the connection string. Example: user:password@tcp(127.0.0.1:3306)/database")
@@ -57,18 +61,13 @@ func FlagParser() {
 
 	if dialect == "" || connString == "" || tableName == "" {
 		log.Print("empty values for -d, -c or -t. using config.json")
-		GetConfig()
+		return false
 	}
+	return true
 }
 
-func ReadInput(stdOut string) string {
-	fmt.Printf(stdOut)
-	scanner := bufio.NewScanner(os.Stdin)
-
-	for !scanner.Scan() {
-	}
-
-	return scanner.Text()
+func GetDBs() []Database {
+	return databases
 }
 
 var dialect string
@@ -76,3 +75,6 @@ var connString string
 var tableName string
 var logFile string
 var cfgFile string
+
+// var tables []Table = []Table{}
+var databases []Database

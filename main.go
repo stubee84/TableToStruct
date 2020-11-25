@@ -11,39 +11,48 @@ import (
 )
 
 func main() {
-	config.Get()
 	config.Logger()
 	defer config.FileLogger().Close()
 
-	result := selectQuery()
+	config.InitConfig()
 
-	file, err := os.OpenFile(fmt.Sprintf("%s.go", config.Get().TableName), os.O_WRONLY|os.O_CREATE, 0600)
-	if err != nil {
-		config.Logger().Fatal(err.Error())
-	}
-	defer file.Close()
-
-	_, err = file.Write([]byte(result))
-	if err != nil {
-		config.Logger().Fatal(err.Error())
+	for _, database := range config.GetDBs() {
+		selectQuery(&database)
 	}
 }
 
-func selectQuery() string {
+func selectQuery(database *config.Database) {
 	var ddl parsers.SQLTableParser
 	var rows *sql.Rows
-	switch config.Get().Dialect {
-	case "mysql":
-		ddl = &mysql.MysqlDDL{}
 
-		query := fmt.Sprintf("show create table %s", config.Get().TableName)
-		rows = parsers.InitQuery(query)
-	case "postgres":
-		ddl = &postgresql.PostgresDDL{}
-		query := fmt.Sprintf(`select column_name,is_nullable,data_type 
-			from information_schema.columns 
-			where table_name = '%s';`, config.Get().TableName)
-		rows = parsers.InitQuery(query)
+	for _, table := range database.Tables {
+		config.Logger().Info(fmt.Sprintf("Querying the table %s", table.Name))
+		switch database.Dialect {
+		case "mysql":
+			ddl = &mysql.MysqlDDL{}
+
+			database.Query = fmt.Sprintf("show create table %s", table.Name)
+			rows = parsers.InitQuery(database)
+		case "postgres":
+			ddl = &postgresql.PostgresDDL{
+				Table: table.Name,
+			}
+			database.Query = fmt.Sprintf(`select column_name,is_nullable,data_type 
+				from information_schema.columns 
+				where table_name = '%s';`, table.Name)
+
+			rows = parsers.InitQuery(database)
+		}
+
+		file, err := os.OpenFile(fmt.Sprintf("%s.go", table.Name), os.O_WRONLY|os.O_CREATE, 0600)
+		if err != nil {
+			config.Logger().Fatal(err.Error())
+		}
+		defer file.Close()
+
+		_, err = file.Write([]byte(ddl.Parse(ddl.GetTable(rows))))
+		if err != nil {
+			config.Logger().Fatal(err.Error())
+		}
 	}
-	return ddl.Parse(ddl.GetTable(rows))
 }
