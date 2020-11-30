@@ -1,74 +1,77 @@
 package config
 
 import (
-	"bufio"
 	"encoding/json"
 	"flag"
-	"fmt"
 	"io/ioutil"
-	"log"
-	"os"
 )
 
 type Config struct {
-	Dialect    string `json:"dialect"`
-	ConnString string `json:"connString"`
-	TableName  string `json:"tableName"`
-	LogFile    string `json:"logFile"`
+	LogFile   string     `json:"logFile"`
+	Databases []Database `json:"databases"`
 }
 
-func Get() *Config {
-	if cfgFile == "" || (dialect == "" && connString == "" && tableName == "") {
-		FlagParser()
-	}
-
-	return &Config{
-		Dialect:    dialect,
-		ConnString: connString,
-		TableName:  tableName,
-	}
+type Database struct {
+	Dialect    string  `json:"dialect"`
+	ConnString string  `json:"connString"`
+	Tables     []Table `json:"tables"`
+	Query      string
 }
 
-func GetConfig() {
-	cfg := &Config{}
-	cfgBody, err := ioutil.ReadFile(cfgFile)
-	if err != nil {
-		Logger().Fatal(err.Error())
-	}
-	err = json.Unmarshal(cfgBody, cfg)
-	if err != nil {
-		Logger().Fatal(err.Error())
-	}
-
-	dialect = cfg.Dialect
-	connString = cfg.ConnString
-	tableName = cfg.TableName
-	logFile = cfg.LogFile
+type Table struct {
+	Name string `json:"name"`
 }
 
-func FlagParser() {
-	flag.StringVar(&cfgFile, "file", "config/config.json", "Config file for table access")
+func InitConfig() {
 	flag.StringVar(&dialect, "d", "mysql", "Specify SQL dialect. Default is mysql")
 	flag.StringVar(&connString, "c", "", "Specify the connection string. Example: user:password@tcp(127.0.0.1:3306)/database")
 	flag.StringVar(&tableName, "t", "", "The database tablename to parse.")
+	flag.StringVar(&cfgFile, "file", "config/config.json", "Config file for table access")
 	flag.StringVar(&logFile, "l", "config/TableToStruct", "The log file to which logs are written")
-
 	flag.Parse()
 
-	if dialect == "" || connString == "" || tableName == "" {
-		log.Print("empty values for -d, -c or -t. using config.json")
-		GetConfig()
+	cfg := &Config{}
+	if !FlagParser() {
+
+		cfgBody, err := ioutil.ReadFile(cfgFile)
+		if err != nil {
+			FlagParser()
+			Logger().Fatal(err.Error())
+		}
+		err = json.Unmarshal(cfgBody, cfg)
+		if err != nil {
+			Logger().Fatal(err.Error())
+		}
+
+		logFile = cfg.LogFile
+		databases = cfg.Databases
+	} else {
+		cfg.LogFile = logFile
+		cfg.Databases = []Database{
+			{
+				Dialect:    dialect,
+				ConnString: connString,
+				Tables: []Table{
+					{
+						Name: tableName,
+					},
+				},
+			},
+		}
+		databases = cfg.Databases
 	}
 }
 
-func ReadInput(stdOut string) string {
-	fmt.Printf(stdOut)
-	scanner := bufio.NewScanner(os.Stdin)
-
-	for !scanner.Scan() {
+func FlagParser() bool {
+	if dialect == "" || connString == "" || tableName == "" {
+		Logger().Info("empty values for -d, -c or -t. using config.json")
+		return false
 	}
+	return true
+}
 
-	return scanner.Text()
+func GetDBs() []Database {
+	return databases
 }
 
 var dialect string
@@ -76,3 +79,4 @@ var connString string
 var tableName string
 var logFile string
 var cfgFile string
+var databases []Database

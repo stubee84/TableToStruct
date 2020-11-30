@@ -5,19 +5,18 @@ import (
 )
 
 var createTableMap map[string]string = map[string]string{
-	"tableName": "alarm_state_tracking",
-	"1":         "id:false:integer",
-	"2":         "cascade_id:false:text",
-	"3":         "alarm_sent_at:false:timestamp with time zone",
-	"4":         "clear_alarm:true:boolean",
-	"5":         "alarm_cleared_at:false:timestamp with time zone",
-	"6":         "api_recovery_event_id:true:integer",
-	"7":         "api_status_code_problem:true:integer",
-	"8":         "api_status_code_recovery:true:integer",
-	"9":         "api_response_problem:true:text",
-	"10":        "api_response_recovery:true:text",
-	"11":        "created_at:false:timestamp with time zone",
-	"12":        "updated_at:false:timestamp with time zone",
+	"1":  "id:false:integer",
+	"2":  "cascade_id:false:text",
+	"3":  "alarm_sent_at:false:timestamp with time zone",
+	"4":  "clear_alarm:true:boolean",
+	"5":  "alarm_cleared_at:false:timestamp with time zone",
+	"6":  "api_recovery_event_id:true:integer",
+	"7":  "api_status_code_problem:true:integer",
+	"8":  "api_status_code_recovery:true:integer",
+	"9":  "api_response_problem:true:text",
+	"10": "api_response_recovery:true:text",
+	"11": "created_at:false:timestamp with time zone",
+	"12": "updated_at:false:timestamp with time zone",
 }
 
 var expected string = "package alarm_state_tracking " +
@@ -42,7 +41,9 @@ var expected string = "package alarm_state_tracking " +
 	"}"
 
 func TestParser(t *testing.T) {
-	p := PostgresDDL{}
+	p := PostgresDDL{
+		Table: "alarm_state_tracking",
+	}
 	finishedStruct := p.Parse(createTableMap)
 
 	if finishedStruct != expected {

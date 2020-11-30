@@ -1,6 +1,23 @@
 {
-    "logFile": "config/TableToStruct",
-    "dialect": "postgres",
-    "connString": "postgres:\/\/postgres:password@localhost\/telnet?sslmode=disable",
-    "tableName": "chat"
+    "logFile": "config\/TableToStruct",
+    "databases": [
+        {
+            "dialect": "postgres",
+            "connString": "postgres:\/\/postgres:password@localhost\/telnet?sslmode=disable",
+            "tables": [
+                {
+                    "name": "chat"
+                }
+            ]
+        },
+        {
+            "dialect": "mysql",
+            "connString": "root:password@tcp(127.0.0.1:3306)/patrol_dev_integration",
+            "tables": [
+                {
+                    "name": "signatures"
+                }
+            ]
+        }
+    ]
 }

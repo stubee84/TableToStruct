@@ -4,7 +4,6 @@ import (
 	"TableToStruct/config"
 	"TableToStruct/db"
 	"database/sql"
-	"fmt"
 )
 
 type SQLTableParser interface {
@@ -12,21 +11,20 @@ type SQLTableParser interface {
 	GetTable(*sql.Rows) map[string]string
 }
 
-func InitQuery(query string) *sql.Rows {
+func InitQuery(database *config.Database) *sql.Rows {
 	var DB *sql.DB
 	var err error
-	switch config.Get().Dialect {
+	switch database.Dialect {
 	case "mysql":
-		DB, err = db.MysqlConnect()
+		DB, err = db.MysqlConnect(database)
 	case "postgres":
-		DB, err = db.PostgresConnect()
+		DB, err = db.PostgresConnect(database)
 	}
 	if err != nil {
 		config.Logger().Error(err.Error())
 	}
 
-	config.Logger().Info(fmt.Sprintf("Querying the table %s", config.Get().TableName))
-	rows, err := DB.Query(query)
+	rows, err := DB.Query(database.Query)
 	if err != nil {
 		config.Logger().Fatal(err.Error())
 	}

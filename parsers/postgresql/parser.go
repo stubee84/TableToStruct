@@ -12,15 +12,14 @@ type PostgresDDL struct {
 	columnName string
 	isNullable string
 	dataType   string
+	Table      string
 }
 
 func (p *PostgresDDL) Parse(tableMap map[string]string) string {
-	tableName := tableMap["tableName"]
-	delete(tableMap, "tableName")
 	sqlStruct := strings.Builder{}
 
 	config.Logger().Info("Parsing the table DDL")
-	sqlStruct.WriteString(fmt.Sprintf("package %s \n\ntype %s struct {\n", tableName, tableName))
+	sqlStruct.WriteString(fmt.Sprintf("package %s \n\ntype %s struct {\n", p.Table, p.Table))
 
 	for i := 1; i <= len(tableMap); i++ {
 		splitValue := strings.Split(tableMap[fmt.Sprint(i)], ":")
@@ -38,7 +37,7 @@ func (p *PostgresDDL) Parse(tableMap map[string]string) string {
 		}
 	}
 
-	sqlStruct.WriteString(fmt.Sprintf("}\n\nfunc (%s *%s) TableName() string {\nreturn \"%s\"\n}", tableName, tableName, tableName))
+	sqlStruct.WriteString(fmt.Sprintf("}\n\nfunc (%s *%s) TableName() string {\nreturn \"%s\"\n}", p.Table, p.Table, p.Table))
 	config.Logger().Info("Finished parsing")
 
 	return sqlStruct.String()
@@ -63,8 +62,6 @@ func (p *PostgresDDL) GetTable(rows *sql.Rows) map[string]string {
 		//provide the index as the key because maps do not retain order
 		tableMap[strconv.Itoa(index)] = fmt.Sprintf("%s:%t:%s", p.columnName, isNullable, p.dataType)
 	}
-	tableMap["tableName"] = config.Get().TableName
-
 	return tableMap
 }
 
@@ -140,5 +137,4 @@ func postgresToGoNull(columnName, columnType string, line *strings.Builder) {
 		line.WriteString("sql.NullString ")
 	}
 	line.WriteString(fmt.Sprintf("`gorm:\"column:%s\"`\n", columnName))
-
 }
