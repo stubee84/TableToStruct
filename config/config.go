@@ -58,6 +58,7 @@ func InitConfig() {
 				},
 			},
 		}
+		databases = cfg.Databases
 	}
 }
 
